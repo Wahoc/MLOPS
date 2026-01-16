@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Churn Predictor</title>
+
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(
+                rgba(15, 23, 42, 0.75),
+                rgba(15, 23, 42, 0.75)
+            ),
+            url("https://images.unsplash.com/photo-1556761175-4b46a572b786") center / cover no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(6px);
+            width: 420px;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .field {
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-size: 13px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.95;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .success {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .danger {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1><i class="fa-solid fa-chart-line"></i> Churn Predictor</h1>
+    <div class="subtitle">Modèle de prédiction client</div>
+
+    <form id="predict-form">
+        <div class="field">
+            <label><i class="fa-solid fa-user"></i> Âge</label>
+            <input type="number" name="Age" value="42" required>
+        </div>
+
+        <div class="field">
+            <label><i class="fa-solid fa-user-tie"></i> Account Manager</label>
+            <select name="Account_Manager">
+                <option value="0">Non</option>
+                <option value="1">Oui</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label><i class="fa-solid fa-clock"></i> Ancienneté (années)</label>
+            <input type="number" name="Years" value="3" required>
+        </div>
+
+        <div class="field">
+            <label><i class="fa-solid fa-network-wired"></i> Nombre de sites</label>
+            <input type="number" name="Num_Sites" value="18" required>
+        </div>
+
+        <button type="submit">
+            <i class="fa-solid fa-play"></i> Lancer la prédiction
+        </button>
+    </form>
+
+    <div id="result" class="result"></div>
+
+    <footer>
+        Data science demo – Flask
+    </footer>
+</div>
+
+<script>
+    const form = document.getElementById("predict-form");
+    const resultDiv = document.getElementById("result");
+
+    form.addEventListener("submit", e => {
+        e.preventDefault();
+        resultDiv.style.display = "none";
+
+        fetch("/predict", {
+            method: "POST",
+            body: new FormData(form)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.churn_prediction !== undefined) {
+                const churn = data.churn_prediction === 1;
+
+                resultDiv.innerHTML = churn
+                    ? "⚠️ Client à <strong>fort risque</strong> de churn"
+                    : "✅ Client <strong>fidèle</strong>";
+
+                resultDiv.className = "result " + (churn ? "danger" : "success");
+                resultDiv.style.display = "block";
+            } else {
+                throw new Error(data.error);
+            }
+        })
+        .catch(() => {
+            resultDiv.textContent = "Erreur lors de la prédiction";
+            resultDiv.className = "result danger";
+            resultDiv.style.display = "block";
+        });
+    });
+</script>
+
+</body>
+</html>
